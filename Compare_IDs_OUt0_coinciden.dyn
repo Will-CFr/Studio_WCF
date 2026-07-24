@@ -1,0 +1,19 @@
+# IN[0] = elementos base
+# IN[1] = elementos referencia
+
+elements_a = IN[0]
+elements_b = IN[1]
+
+# Crear set de comparación (más rápido)
+ids_b = set([e.UniqueId for e in elements_b])
+
+coinciden = []
+no_coinciden = []
+
+for e in elements_a:
+    if e.UniqueId in ids_b:
+        coinciden.append(e)
+    else:
+        no_coinciden.append(e)
+
+OUT = (coinciden, no_coinciden)
