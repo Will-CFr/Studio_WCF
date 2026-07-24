@@ -1,0 +1,70 @@
+import clr
+
+# Revit API
+clr.AddReference('RevitAPI')
+from Autodesk.Revit.DB import *
+
+# Revit Services
+clr.AddReference('RevitServices')
+from RevitServices.Persistence import DocumentManager
+from RevitServices.Transactions import TransactionManager
+
+# Documento actual
+doc = DocumentManager.Instance.CurrentDBDocument
+
+# Entrada
+viewports = UnwrapElement(IN[0])
+separacion_cm = (IN[1])
+
+# Separación en cm
+
+# Convertir cm a pies
+separacion = separacion_cm / 30.48
+
+# Ordenar de arriba a abajo
+viewports = sorted(
+    viewports,
+    key=lambda vp: vp.GetBoxCenter().Y,
+    reverse=True
+)
+
+TransactionManager.Instance.EnsureInTransaction(doc)
+
+# Primer viewport como referencia
+vp_base = viewports[0]
+
+base_center = vp_base.GetBoxCenter()
+
+# Ancho del primero
+base_outline = vp_base.GetBoxOutline()
+base_height = base_outline.MaximumPoint.Y - base_outline.MinimumPoint.Y
+
+# Posición acumulada
+current_y = base_center.Y
+
+for i in range(1, len(viewports)) :
+
+    vp = viewports[i]
+
+    outline = vp.GetBoxOutline()
+    height = outline.MaximumPoint.Y - outline.MinimumPoint.Y
+
+    # Nueva posición Y
+    current_y = current_y - (base_height / 2) - separacion - (height / 2)
+
+    old_center = vp.GetBoxCenter()
+
+    new_center = XYZ(
+        old_center.X,
+        current_y,
+        old_center.Z
+    )
+
+    vp.SetBoxCenter(new_center)
+
+    # Actualizar altura base
+    base_height = height
+
+TransactionManager.Instance.TransactionTaskDone()
+
+OUT = viewports
