@@ -1,0 +1,34 @@
+import clr
+
+clr.AddReference('RevitAPI')
+from Autodesk.Revit.DB import *
+
+# Entrada
+elements = IN[0]
+xmetros = IN[1]
+
+# Asegurar lista
+if not isinstance(elements, list):
+    elements = [elements]
+
+# Longitud límite (metros -> pies)
+limit = xmetros * 3.28084
+
+# Resultado
+elementsOverLimit = []
+
+for elem in elements:
+
+    revitElem = elem.InternalElement
+
+    # Verificar que tenga el parámetro de longitud
+    param = revitElem.get_Parameter(BuiltInParameter.CURVE_ELEM_LENGTH)
+
+    if param:
+        length = param.AsDouble()
+
+        if length > limit:
+            elementsOverLimit.append(elem)
+
+# Salida
+OUT = elementsOverLimit

@@ -1,0 +1,40 @@
+import clr
+clr.AddReference("RevitAPI")
+from Autodesk.Revit.DB import *
+
+# Entrada desde Dynamo
+elements = UnwrapElement(IN[0])
+
+if not isinstance(elements, list):
+    elements = [elements]
+
+horizontales = []
+verticales = []
+
+tolerance = 0.001
+
+for elem in elements:
+
+    if elem is None:
+        continue
+
+    loc = elem.Location
+
+    # Verificar que tenga una curva
+    if not isinstance(loc, LocationCurve):
+        continue
+
+    curve = loc.Curve
+
+    if curve is None:
+        continue
+
+    direction = curve.Direction
+
+    # Horizontal
+    if abs(direction.Z) < tolerance:
+        horizontales.append(elem)
+    else:
+        verticales.append(elem)
+
+OUT = horizontales, verticales
